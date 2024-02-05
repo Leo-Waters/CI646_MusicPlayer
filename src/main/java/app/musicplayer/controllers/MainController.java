@@ -259,19 +259,55 @@ public class MainController implements Initializable, PlaylistViewController.Pla
                 String text = textBox.getText();
 
                 if (!text.isEmpty()) {
+
+                    //ensure playlist name is correct length
+                    if (text.length() > MAX_PLAYLIST_TITLE_LENGTH) {
+
+                        text=text.substring(0, MAX_PLAYLIST_TITLE_LENGTH);
+                    }
+                    //is the playlist a duplicate
                     if (library.findPlaylistByTitle(text).isPresent()) {
-                        System.out.println("TODO: Playlist already exists");
-                    } else {
+                        //get user added duplicate number, if it exists
+                        String previousDuplicateNumber="";
+                        int DuplicateLeng=1;
+                        while (true){
+                            //loop through characters back to front to acquire user entered number
+                            char digit =text.charAt(text.length()-DuplicateLeng);
+                            if(Character.isDigit(digit)){
+                                //append number to front of string
+                                previousDuplicateNumber=digit+previousDuplicateNumber;
+                                DuplicateLeng++;
+                            }else {
+                                //reached end of number, exit loop
+                                DuplicateLeng--;
+                                break;
+                            }
+                        }
+                        //add number to end to create unique name
+                        int DuplicateNumber=2;
 
+                        if(!previousDuplicateNumber.isEmpty()){
+                            //set duplicate number to the number from text
+                            text=text.substring(0,text.length()-DuplicateLeng);
+                            DuplicateNumber=Integer.parseInt(previousDuplicateNumber);
+                        }
+                        //increment duplicate number until a unique value is found
+                        while (library.findPlaylistByTitle(text+ DuplicateNumber).isPresent()){
+
+                            DuplicateNumber++;
+                        }
+                        text+=DuplicateNumber;
+
+                        //make sure duplicate number does not make the name too long
                         if (text.length() > MAX_PLAYLIST_TITLE_LENGTH) {
-                            System.out.println("TODO: Playlist title is too long");
-                        } else {
-                            // all good
-                            var playlist = library.addPlaylist(text);
-
-                            addNewPlaylistToUI(playlist);
+                            int overLeng=-text.length()-MAX_PLAYLIST_TITLE_LENGTH;
+                            //remove front of string to signify to user this was a duplicate, which was too long
+                            text=text.substring(overLeng);
                         }
                     }
+                    //add playlist to library
+                    var playlist = library.addPlaylist(text);
+                    addNewPlaylistToUI(playlist);
                 }
 
                 canAnimateNewPlaylist = true;
